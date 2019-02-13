@@ -196,7 +196,6 @@ class ConnectNBoard {
 
             if (moves >= BOARD_SIZE * BOARD_SIZE) {
                 printf("The board is full\n");
-                whichPlayerWin = opponent;
                 return -1;
             }
             if (i < 0 || i >= BOARD_SIZE
@@ -230,7 +229,6 @@ class ConnectNBoard {
 
             if (moves >= BOARD_SIZE * BOARD_SIZE) {
                 printf("The board is full\n");
-                whichPlayerWin = opponent;
                 return -1;
             }
             if (move < 0 || move >= BOARD_SIZE * BOARD_SIZE) {
