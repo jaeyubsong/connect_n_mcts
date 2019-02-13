@@ -29,11 +29,29 @@ int random (int lim)
 }
 
 class ConnectNBoard {
-    int moves;
-    char board[BOARD_SIZE][BOARD_SIZE];
+    private:
+        int moves;
+        char** board;
+        int whichPlayerWin;
     
     public:
-        ConnectNBoard(int flag) : moves(0) {
+        int getMoves() {
+            return moves;
+        }
+
+        char** getBoard() {
+            return board;
+        }
+
+        int getWhichPlayerWin() {
+            return whichPlayerWin;
+        }
+
+        ConnectNBoard(int flag) : moves(0), whichPlayerWin(0) {
+            board = (char**) malloc(BOARD_SIZE * sizeof(char *));
+            for (int i = 0; i < BOARD_SIZE; i++) {
+                board[i] = (char *) malloc(BOARD_SIZE * sizeof(char));
+            }
             if (flag == EMPTY_INIT) {
                 for (int i = 0; i < BOARD_SIZE; i++) {
                     for (int j = 0; j < BOARD_SIZE; j++) {
@@ -53,6 +71,7 @@ class ConnectNBoard {
                 }    
             }
         }
+
         void showBoard() {
             printf("Board is showed below\n");
             char startChar = 'A';
@@ -80,15 +99,26 @@ class ConnectNBoard {
                 printf("\n");
             }
         }
-        bool isWin(char player) {
+
+        bool isWin(int player) {
+            char playerMove;
+            if (player == PLAYER1) {
+                playerMove = PLAYER1MOVE;
+            } else if (player == PLAYER2) {
+                playerMove = PLAYER2MOVE;
+            } else {
+                printf("Wrong player\n");
+                return -1;
+            }
             // Check horizontal
             int consec = 0;
             for (int i = 0; i < BOARD_SIZE; i++) {
                 for (int j = 0; j < BOARD_SIZE; j++) {
-                    if (board[i][j] == player) {
+                    if (board[i][j] == playerMove) {
                         consec++;
                         if (consec == WIN_LENGTH) {
-                            printf("%c: Win by horizontal\n", player);
+                            printf("%c: Win by horizontal\n", playerMove);
+                            whichPlayerWin = player;
                             return true;
                         }
                     } else
@@ -101,10 +131,11 @@ class ConnectNBoard {
             consec = 0;
             for (int i = 0; i < BOARD_SIZE; i++) {
                 for (int j = 0; j < BOARD_SIZE; j++) {
-                    if (board[j][i] == player) {
+                    if (board[j][i] == playerMove) {
                         consec++;
                         if (consec == WIN_LENGTH) {
-                            printf("%c: Win by vertical\n", player);
+                            printf("%c: Win by vertical\n", playerMove);
+                            whichPlayerWin = player;
                             return true;
                         }
                     } else
@@ -120,10 +151,11 @@ class ConnectNBoard {
                 for (int j = 0; j < BOARD_SIZE; j++) {
                     max_inspect = BOARD_SIZE - max(i,j);
                     for (int k = 0; k < max_inspect; k++) {
-                        if (board[i+k][j+k] == player) {
+                        if (board[i+k][j+k] == playerMove) {
                             consec++;
                             if (consec == WIN_LENGTH) {
-                                printf("%c: Win by right diagonal\n", player);
+                                printf("%c: Win by right diagonal\n", playerMove);
+                                whichPlayerWin = player;
                                 return true;
                             }
                         }
@@ -140,10 +172,11 @@ class ConnectNBoard {
                 for (int j = 0; j < BOARD_SIZE; j++) {
                     max_inspect = BOARD_SIZE - max(BOARD_SIZE - i,j);
                     for (int k = 0; k < max_inspect; k++) {
-                        if (board[i-k][j-k] == player) {
+                        if (board[i-k][j-k] == playerMove) {
                             consec++;
                             if (consec == WIN_LENGTH) {
-                                printf("%c: Win by left diagonal\n", player);
+                                printf("%c: Win by left diagonal\n", playerMove);
+                                whichPlayerWin = player;
                                 return true;
                             }
                         }
@@ -154,20 +187,82 @@ class ConnectNBoard {
                 }
             }
 
-            printf("%c: Not win\n", player);
+            printf("%c: Not win\n", playerMove);
             return false;
         }
 
-        int makeMove(int i, int j, char playerMove) {
+        int makeMove(int i, int j, int player) {
+            char playerMove;
+            int opponent;
+            if (player == PLAYER1) {
+                playerMove = PLAYER1MOVE;
+                opponent = PLAYER2;
+            } else if (player == PLAYER2) {
+                playerMove = PLAYER2MOVE;
+                opponent = PLAYER1;
+            } else {
+                printf("Wrong player\n");
+                return -1;
+            }
+
             if (moves >= BOARD_SIZE * BOARD_SIZE) {
+                printf("The board is full\n");
+                whichPlayerWin = opponent;
+                return -1;
+            }
+            if (i < 0 || i >= BOARD_SIZE
+            || j < 0 || j >= BOARD_SIZE) {
+                printf("Invalid move of i: %d, j: %d in makeMove\n", i, j);
+                whichPlayerWin = opponent;
                 return -1;
             }
             if (board[i][j] == ' ') {
                 board[i][j] = playerMove;
                 moves++;
                 return (i*BOARD_SIZE + j);
+            } else {
+                printf("Stone exists at i: %d, j: %d in makeMove\n", i, j);
+                whichPlayerWin = opponent;
+                return -1;
             }
-            return -1;
+
+        }
+
+        int makeMove(int move, int player) {
+            char playerMove;
+            int opponent;
+            if (player == PLAYER1) {
+                playerMove = PLAYER1MOVE;
+                opponent = PLAYER2;
+            } else if (player == PLAYER2) {
+                playerMove = PLAYER2MOVE;
+                opponent = PLAYER1;
+            } else {
+                printf("Wrong player\n");
+                return -1;
+            }
+
+            if (moves >= BOARD_SIZE * BOARD_SIZE) {
+                printf("The board is full\n");
+                whichPlayerWin = opponent;
+                return -1;
+            }
+            if (move < 0 || move >= BOARD_SIZE * BOARD_SIZE) {
+                printf("Invalid move of %d in makeMove\n", move);
+                whichPlayerWin = opponent;
+                return -1;
+            }
+            int i = move / BOARD_SIZE;
+            int j = move % BOARD_SIZE;
+            if (board[i][j] == ' ') {
+                board[i][j] = playerMove;
+                moves++;
+                return (i*BOARD_SIZE + j);
+            } else {
+                printf("Stone exists at i: %d, j: %d in makeMove\n", i, j);
+                whichPlayerWin = opponent;
+                return -1;
+            }
         }
 
         int makeRandomMove(char playerMove) {
@@ -186,8 +281,50 @@ class ConnectNBoard {
             return i*BOARD_SIZE + j;
         }
 
-        int getMoves() {
-            return moves;
+        int playGame(int (*player1Func)(char**, int), int (*player2Func)(char**, int), bool showBoard) {
+            bool gameDone = false;
+            int whoseTurn = PLAYER1;
+            int myMove;
+            while (true) {
+                if (moves >= BOARD_SIZE * BOARD_SIZE) {
+                    break;
+                }
+                if (whoseTurn == PLAYER1) {
+                    myMove = (player1Func)(board, PLAYER1);
+                    myMove = this->makeMove(myMove, PLAYER1);
+                    gameDone = this->isWin(PLAYER1);
+                    if (showBoard) {
+                        this->showBoard();
+                    }
+                    if (gameDone)
+                        break;
+                    whoseTurn = PLAYER2;
+                }
+                else if (whoseTurn == PLAYER2) {
+                    myMove = (player2Func)(board, PLAYER2);
+                    myMove = this->makeMove(myMove, PLAYER2);
+                    gameDone = this->isWin(PLAYER2);
+                    if (showBoard) {
+                        this->showBoard();
+                    }
+                    if (gameDone)
+                        break;
+                    whoseTurn = PLAYER1;
+                }
+            }
+        }
+
+        int finishGame(bool printWinner) {
+            if (printWinner) {
+                if (whichPlayerWin == PLAYER1)
+                    printf("Player1 won\n");
+                else if (whichPlayerWin == PLAYER2)
+                    printf("Player2 won\n");
+                else
+                    printf("No one won\n");
+            }
+            free(board);
+            return whichPlayerWin;
         }
 };
 
@@ -199,25 +336,49 @@ void printMove(int myMove) {
     printf("%c%d", startChar, startInt);
 }
 
+int charToMove(char myChar, int myInt) {
+    int offset = myChar - 'A';
+    return (BOARD_SIZE - myInt) * BOARD_SIZE + offset;
+}
+
+bool checkValidInput (char myChar, int myInt) {
+    int offset = myChar - 'A';
+    if (offset < 0 || offset > BOARD_SIZE
+    || myInt < 0 || myInt > BOARD_SIZE) {
+        return false;
+    }
+    return true;
+}
+
+int getHumanMove(char** board, int player) {
+    char myChar;
+    int myInt;
+    int myMove;
+    int i,j;
+    while (true) {
+        if (scanf("%c%d", &myChar, &myInt) == 2) {
+            if (checkValidInput(myChar, myInt) == false) {
+                printf("Invalid move, try again\n");
+                continue;
+            }
+            myMove = charToMove(myChar, myInt);
+            i = myMove / BOARD_SIZE;
+            j = myMove % BOARD_SIZE;
+            if (board[i][j] != ' ') {
+                printf("Invalid move, try again\n");
+                continue;
+            }
+            return myMove;
+        }
+    }
+}
+
 
 int main() {
     assert(BOARD_SIZE >= WIN_LENGTH);
-    ConnectNBoard board(RANDOM_INIT);
-    int myMove = board.makeRandomMove(PLAYER1MOVE);
-    printMove(myMove);
-    printf("\n");
-    myMove = board.makeRandomMove(PLAYER2MOVE);
-    printMove(myMove);
-    printf("\n");
-    bool player1Win = board.isWin(PLAYER1MOVE);
-    bool player2Win = board.isWin(PLAYER2MOVE);
+    ConnectNBoard board(EMPTY_INIT);
     board.showBoard();
-    if (player1Win)
-        printf("Player1 won\n");
-    else if (player2Win)
-        printf("Player2 won\n");
-    else
-        printf("No one won\n");
-    printf("Moves: %d\n", board.getMoves());
-    
+    board.playGame(getHumanMove, getHumanMove, true);
+
+    board.finishGame(true);
 }
