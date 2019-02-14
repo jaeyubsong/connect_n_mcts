@@ -33,7 +33,7 @@ int random(int lim);
 void printMove(int myMove);
 int charToMove(char myChar, int myInt);
 bool checkValidInput(char myChar, int myInt);
-char boardToPlayerMove(int player);
+char playerToPlayerMove(int player);
 int getHumanMove(int** board, int player);
 
 class ConnectNBoard {
@@ -88,7 +88,7 @@ class ConnectNBoard {
                 }
                 printf("%d ", startNum--);
                 for (int j = 0; j < BOARD_SIZE; j++) {
-                    printf(" %c ", boardToPlayerMove(board[i][j]));
+                    printf(" %c ", playerToPlayerMove(board[i][j]));
                     if (j != BOARD_SIZE-1) {
                         printf("|");
                     }
@@ -162,9 +162,10 @@ class ConnectNBoard {
             consec = 0;
             for (int i = 0; i < BOARD_SIZE; i++) {
                 for (int j = 0; j < BOARD_SIZE; j++) {
-                    max_inspect = BOARD_SIZE - max(BOARD_SIZE - i,j);
+                    max_inspect = min(BOARD_SIZE-i-1, j) + 1;
+                    // printf("i:%d, j:%d, max_inspect:%d\n", i, j, max_inspect);
                     for (int k = 0; k < max_inspect; k++) {
-                        if (board[i-k][j-k] == player) {
+                        if (board[i+k][j-k] == player) {
                             consec++;
                             if (consec == WIN_LENGTH) {
                                 printf("player%d: Win by left diagonal\n", player);
@@ -274,7 +275,7 @@ class ConnectNBoard {
             return i*BOARD_SIZE + j;
         }
 
-        int playGame(int (*player1Func)(int**, int), int (*player2Func)(int**, int), bool showBoard) {
+        void playGame(int (*player1Func)(int**, int), int (*player2Func)(int**, int), bool showBoard) {
             bool gameDone = false;
             int whoseTurn = PLAYER1;
             int myMove;
@@ -286,6 +287,8 @@ class ConnectNBoard {
                     myMove = (player1Func)(board, PLAYER1);
                     myMove = this->makeMove(myMove, PLAYER1);
                     gameDone = this->isWin(PLAYER1);
+                    if (myMove == -1)
+                        break;
                     if (showBoard) {
                         this->showBoard();
                     }
@@ -297,6 +300,8 @@ class ConnectNBoard {
                     myMove = (player2Func)(board, PLAYER2);
                     myMove = this->makeMove(myMove, PLAYER2);
                     gameDone = this->isWin(PLAYER2);
+                    if (myMove == -1)
+                        break;
                     if (showBoard) {
                         this->showBoard();
                     }
@@ -343,7 +348,7 @@ bool checkValidInput(char myChar, int myInt) {
     return true;
 }
 
-char boardToPlayerMove(int player) {
+char playerToPlayerMove(int player) {
     if (player == EMPTY)
         return ' ';
     else if (player == PLAYER1)
@@ -358,6 +363,7 @@ int getHumanMove(int** board, int player) {
     int myInt;
     int myMove;
     int i,j;
+    printf("player%d turn: ", player);
     while (true) {
         if (scanf("%c%d", &myChar, &myInt) == 2) {
             if (checkValidInput(myChar, myInt) == false) {
